@@ -20,6 +20,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.onesignal.OneSignal;
 import com.xery.whatsappclone.Chat.ChatObject;
 import com.xery.whatsappclone.Chat.ChatListAdapter;
+import com.xery.whatsappclone.User.UserObject;
 
 import java.util.ArrayList;
 
@@ -76,7 +77,7 @@ public class MainPageActivity extends AppCompatActivity {
 
     private void getUserChatList() {
         DatabaseReference mUserChatDB = FirebaseDatabase.getInstance().getReference().child("users").
-                child(FirebaseAuth.getInstance().getUid()).child("chat");
+                child(FirebaseAuth.getInstance().getUid()).child("chats");
 
         mUserChatDB.addValueEventListener(new ValueEventListener() {
             @Override
@@ -94,9 +95,70 @@ public class MainPageActivity extends AppCompatActivity {
                         if (exists)
                             continue;
                         chatList.add(chat);
-                        mChatListAdapter.notifyDataSetChanged();
+                        getChatData(chat.getChatId());
                     }
                 }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void getChatData(final String chatId) {
+        DatabaseReference mChatDB = FirebaseDatabase.getInstance().getReference().child("chats").child(chatId).child("info");
+
+        mChatDB.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    String chatId = "";
+
+                    if (dataSnapshot.child("id").getValue() != null)
+                        chatId = dataSnapshot.child("id").getValue().toString();
+
+                    for (DataSnapshot userSnapshot : dataSnapshot.child("users").getChildren()) {
+                        for (ChatObject chat : chatList) {
+                            if (chat.getChatId().equals(chatId)) {
+                                UserObject mUser = new UserObject(userSnapshot.getKey());
+                                chat.addUser(mUser);
+                                getUserData(mUser);
+                            }
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+
+    private void getUserData(UserObject mUser) {
+        DatabaseReference mUserDb = FirebaseDatabase.getInstance().getReference().child("users").child(mUser.getUid());
+
+        mUserDb.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                UserObject mUser = new UserObject(dataSnapshot.getKey());
+
+                if (dataSnapshot.child("notificationKey").getValue() != null)
+                    mUser.setNotificationKey(dataSnapshot.child("notificationKey").getValue().toString());
+
+                for (ChatObject mChat : chatList) {
+                    for (UserObject mUserIt : mChat.getUserObjectArrayList()) {
+                        if (mUserIt.getUid().equals(mUser.getUid())) {
+                            mUserIt.setNotificationKey(mUser.getNotificationKey());
+                        }
+                    }
+                }
+
+                mChatListAdapter.notifyDataSetChanged();
             }
 
             @Override

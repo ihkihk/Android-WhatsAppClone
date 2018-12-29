@@ -1,8 +1,14 @@
 package com.xery.whatsappclone.User;
 
-public class UserObject {
+import java.io.Serializable;
 
-    private String name, phone, uid;
+public class UserObject implements Serializable {
+
+    private String name, phone, uid, notificationKey;
+
+    public UserObject(String uid) {
+        this.uid = uid;
+    }
 
     public UserObject(String uid, String name, String phone) {
         this.name = name;
@@ -13,6 +19,8 @@ public class UserObject {
     public String getName() { return name; }
     public String getPhone() { return phone; }
     public String getUid() { return uid; }
+    public String getNotificationKey() { return notificationKey; }
 
     public void setName(String name) { this.name = name; }
+    public void setNotificationKey(String notificationKey) { this.notificationKey = notificationKey; }
 }

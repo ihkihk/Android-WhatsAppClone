@@ -1,5 +1,6 @@
 package com.xery.whatsappclone.User;
 
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -9,10 +10,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.xery.whatsappclone.R;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.UserListViewHolder> {
 
@@ -39,25 +42,36 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.UserLi
     }
 
     @Override
-    public void onBindViewHolder(@NonNull UserListViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull final UserListViewHolder holder, int position) {
         holder.mName.setText(userList.get(position).getName());
         holder.mPhone.setText(userList.get(position).getPhone());
 
         holder.mLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String key = FirebaseDatabase.getInstance().getReference().child("chats").push().getKey();
-
-                FirebaseDatabase.getInstance().getReference().child("users").
-                        child(FirebaseAuth.getInstance().getUid()).child("chat").
-                        child(key).setValue(true);
-                FirebaseDatabase.getInstance().getReference().child("users").
-                        child(userList.get(position).getUid()).child("chat").
-                        child(key).setValue(true);
-
+                createChat(holder.getAdapterPosition());
             }
         });
 
+    }
+
+    private void createChat(int position) {
+        String key = FirebaseDatabase.getInstance().getReference().child("chats").push().getKey();
+
+
+        HashMap<String, Object> newChatMap = new HashMap();
+        newChatMap.put("id", key);
+        newChatMap.put("users/" + FirebaseAuth.getInstance().getUid(), true);
+        newChatMap.put("users/" + userList.get(position).getUid(), true);
+
+        DatabaseReference chatInfoDb = FirebaseDatabase.getInstance().getReference().child("chats").child(key).child("info");
+
+        chatInfoDb.updateChildren(newChatMap);
+
+        DatabaseReference userDb = FirebaseDatabase.getInstance().getReference().child("users");
+
+        userDb.child(FirebaseAuth.getInstance().getUid()).child("chats").child(key).setValue(true);
+        userDb.child(userList.get(position).getUid()).child("chats").child(key).setValue(true);
     }
 
     class UserListViewHolder extends RecyclerView.ViewHolder {

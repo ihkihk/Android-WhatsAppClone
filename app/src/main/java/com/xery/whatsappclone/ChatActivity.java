@@ -22,9 +22,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.xery.whatsappclone.Chat.ChatObject;
 import com.xery.whatsappclone.Chat.MediaAdapter;
 import com.xery.whatsappclone.Chat.MessageAdapter;
 import com.xery.whatsappclone.Chat.MessageObject;
+import com.xery.whatsappclone.User.UserObject;
+import com.xery.whatsappclone.Utils.SendNotification;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,15 +44,16 @@ public class ChatActivity extends AppCompatActivity {
     ArrayList<MessageObject> messageList;
     ArrayList<String> mediaUriList;
 
-    String chatID;
-    DatabaseReference mChatDB;
+    ChatObject mChatObject;
+
+    DatabaseReference mChatMessagesDB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        chatID = getIntent().getExtras().getString("chatID");
+        mChatObject = (ChatObject)getIntent().getSerializableExtra("chatObject");
 
         Button mSend = findViewById(R.id.send);
         mSend.setOnClickListener(new View.OnClickListener() {
@@ -67,7 +71,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        mChatDB = FirebaseDatabase.getInstance().getReference().child("chats").child(chatID);
+        mChatMessagesDB = FirebaseDatabase.getInstance().getReference().child("chats").child(mChatObject.getChatId()).child("messages");
 
         initializeMessages();
         initializeMedia();
@@ -121,7 +125,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void getChatMessages() {
-        mChatDB.addChildEventListener(new ChildEventListener() {
+        mChatMessagesDB.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 if (dataSnapshot.exists()) {
@@ -173,8 +177,8 @@ public class ChatActivity extends AppCompatActivity {
     private void sendMessage() {
         mMessage = findViewById(R.id.message);
 
-        String messageId = mChatDB.push().getKey();
-        final DatabaseReference msgDB = mChatDB.child(messageId);
+        String messageId = mChatMessagesDB.push().getKey();
+        final DatabaseReference msgDB = mChatMessagesDB.child(messageId);
 
         final Map<String, Object> newMessageMap = new HashMap<>();
 
@@ -189,7 +193,7 @@ public class ChatActivity extends AppCompatActivity {
                 mediaIdList.add(mediaId);
 
                 final StorageReference filePath = FirebaseStorage.getInstance().getReference().child("chats").
-                        child(chatID).child(messageId).child(mediaId);
+                        child(mChatObject.getChatId()).child(messageId).child(mediaId);
 
                 UploadTask uploadTask = filePath.putFile(Uri.parse(uri));
 
@@ -225,6 +229,18 @@ public class ChatActivity extends AppCompatActivity {
         mediaUriList.clear();
         mediaIdList.clear();
         mMediaAdapter.notifyDataSetChanged();
+
+        String message;
+        if (newMessageMap.get("message") != null)
+            message = newMessageMap.get("message").toString();
+        else
+            message = "Sent media";
+
+        for (UserObject mUser : mChatObject.getUserObjectArrayList()) {
+            if (!mUser.getUid().equals(FirebaseAuth.getInstance().getUid())) {
+                new SendNotification(message, "New message", mUser.getNotificationKey());
+            }
+        }
     }
 
     private void initializeMessages() {

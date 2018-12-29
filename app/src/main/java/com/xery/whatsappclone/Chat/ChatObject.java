@@ -1,11 +1,21 @@
 package com.xery.whatsappclone.Chat;
 
-public class ChatObject {
+import com.xery.whatsappclone.User.UserObject;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+
+public class ChatObject implements Serializable {
     private String chatId;
+    private ArrayList<UserObject> userObjectArrayList = new ArrayList<>();
 
     public ChatObject(String chatId) {
         this.chatId = chatId;
     }
 
     public String getChatId() { return chatId; }
+
+    public ArrayList<UserObject> getUserObjectArrayList() { return userObjectArrayList; }
+
+    public void addUser(UserObject mUser) { userObjectArrayList.add(mUser); }
 }

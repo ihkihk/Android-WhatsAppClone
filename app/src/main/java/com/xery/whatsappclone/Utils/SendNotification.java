@@ -12,7 +12,7 @@ public class SendNotification {
         JSONObject notificationContent = new JSONObject(
                 "{'contents': {'en':'" + message + "'}, " +
                 "'include_player_ids': ['" + notificationKey + "'], " +
-                "'headings' : { 'en':" + heading + "'}}");
+                "'headings' : { 'en':'" + heading + "'}}");
 
             OneSignal.postNotification(notificationContent, null);
         } catch (JSONException e) {
