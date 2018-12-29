@@ -28,6 +28,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.onesignal.OneSignal;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,6 +68,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         Fresco.initialize(this);
+        OneSignal.startInit(this).init();
 
         mAuth = FirebaseAuth.getInstance();
         mPhoneAuth = PhoneAuthProvider.getInstance();

@@ -1,7 +1,5 @@
 package com.xery.whatsappclone.Chat;
 
-import android.content.Context;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;

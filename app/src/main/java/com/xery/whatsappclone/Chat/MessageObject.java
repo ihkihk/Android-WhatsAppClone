@@ -13,19 +13,11 @@ public class MessageObject {
         this.mediaUrlList = mediaUrlList;
     }
 
-    public String getMessage() {
-        return message;
-    }
+    public String getMessage() { return message; }
 
-    public String getMessageId() {
-        return messageId;
-    }
+    public String getMessageId() { return messageId; }
 
-    public String getSenderId() {
-        return senderId;
-    }
+    public String getSenderId() { return senderId; }
 
-    public ArrayList<String> getMediaUrlList() {
-        return mediaUrlList;
-    }
+    public ArrayList<String> getMediaUrlList() { return mediaUrlList; }
 }
