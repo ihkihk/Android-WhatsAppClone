@@ -8,7 +8,10 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.telephony.TelephonyManager;
+import android.view.View;
+import android.widget.Button;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -20,6 +23,7 @@ import com.xery.whatsappclone.User.UserListAdapter;
 import com.xery.whatsappclone.Utils.Iso2Phone;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class FindUserActivity extends AppCompatActivity {
 
@@ -34,9 +38,44 @@ public class FindUserActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_find_user);
 
-        initializeRecycleView();
+        userList = new ArrayList<>();
+        contactList = new ArrayList<>();
 
+        Button mCreate = findViewById(R.id.create);
+        mCreate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createChat();
+            }
+        });
+
+        initializeRecycleView();
         getContactsList();
+    }
+
+    private void createChat() {
+        String key = FirebaseDatabase.getInstance().getReference().child("chats").push().getKey();
+        DatabaseReference chatInfoDb = FirebaseDatabase.getInstance().getReference().child("chats").child(key).child("info");
+        DatabaseReference userDb = FirebaseDatabase.getInstance().getReference().child("users");
+
+
+        HashMap<String, Object> newChatMap = new HashMap();
+        newChatMap.put("id", key);
+        newChatMap.put("users/" + FirebaseAuth.getInstance().getUid(), true);
+
+        Boolean validChat = false;
+        for (UserObject mUser : userList) {
+            if (mUser.getSelected()) {
+                validChat = true;
+                newChatMap.put("users/" + mUser.getUid(), true);
+                userDb.child(mUser.getUid()).child("chats").child(key).setValue(true);
+            }
+        }
+
+        if (validChat) {
+            chatInfoDb.updateChildren(newChatMap);
+            userDb.child(FirebaseAuth.getInstance().getUid()).child("chats").child(key).setValue(true);
+        }
     }
 
     private void getContactsList() {
@@ -119,8 +158,7 @@ public class FindUserActivity extends AppCompatActivity {
     }
 
     private void initializeRecycleView() {
-        userList = new ArrayList<>();
-        contactList = new ArrayList<>();
+
 
         mUserList = findViewById(R.id.user_list);
         mUserList.setNestedScrollingEnabled(false);

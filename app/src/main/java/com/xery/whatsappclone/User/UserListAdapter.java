@@ -6,6 +6,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -46,44 +48,28 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.UserLi
         holder.mName.setText(userList.get(position).getName());
         holder.mPhone.setText(userList.get(position).getPhone());
 
-        holder.mLayout.setOnClickListener(new View.OnClickListener() {
+        holder.mAdd.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
-                createChat(holder.getAdapterPosition());
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                userList.get(holder.getAdapterPosition()).setSelected(isChecked);
             }
         });
-
     }
 
-    private void createChat(int position) {
-        String key = FirebaseDatabase.getInstance().getReference().child("chats").push().getKey();
 
-
-        HashMap<String, Object> newChatMap = new HashMap();
-        newChatMap.put("id", key);
-        newChatMap.put("users/" + FirebaseAuth.getInstance().getUid(), true);
-        newChatMap.put("users/" + userList.get(position).getUid(), true);
-
-        DatabaseReference chatInfoDb = FirebaseDatabase.getInstance().getReference().child("chats").child(key).child("info");
-
-        chatInfoDb.updateChildren(newChatMap);
-
-        DatabaseReference userDb = FirebaseDatabase.getInstance().getReference().child("users");
-
-        userDb.child(FirebaseAuth.getInstance().getUid()).child("chats").child(key).setValue(true);
-        userDb.child(userList.get(position).getUid()).child("chats").child(key).setValue(true);
-    }
 
     class UserListViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView mName, mPhone;
-        private LinearLayout mLayout;
+        TextView mName, mPhone;
+        LinearLayout mLayout;
+        CheckBox mAdd;
 
         public UserListViewHolder(View itemView) {
             super(itemView);
 
             mName = itemView.findViewById(R.id.name);
             mPhone = itemView.findViewById(R.id.phone);
+            mAdd = itemView.findViewById(R.id.add);
             mLayout = itemView.findViewById(R.id.user_layout);
         }
 
